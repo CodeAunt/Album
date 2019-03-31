@@ -1,7 +1,13 @@
 package com.example.x280.album;
 
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 
 import android.support.v7.widget.DefaultItemAnimator;
@@ -12,6 +18,7 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -32,6 +39,11 @@ public class AlbumActivity extends AppCompatActivity {
         initPhotos();
         initRecylerView();
         setMainPhoto();
+        if (checkPermissions().size() == 0) {
+//            delayEnter();
+        } else {
+            requestPermissions();
+        }
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -39,7 +51,8 @@ public class AlbumActivity extends AppCompatActivity {
             public void onClick(View view) {
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
-
+            Intent intent = new Intent(AlbumActivity.this, SelectPhotoActivity.class);
+            startActivity(intent);
             }
         });
     }
@@ -56,13 +69,12 @@ public class AlbumActivity extends AppCompatActivity {
 //        catch (){
 //
 //        }
-
         mAdapter = new HomeAdapter();
         mPhotos = new ArrayList<String>();
-        for (int i = 'A'; i < 'z'; i++)
-        {
-            mPhotos.add("" + (char) i);
-        }
+//        for (int i = 'A'; i < 'z'; i++)
+//        {
+//            mPhotos.add("" + (char) i);
+//        }
     }
 
     public void initRecylerView(){
@@ -70,6 +82,10 @@ public class AlbumActivity extends AppCompatActivity {
         mRecyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());
+        if(mPhotos.size() > 0){
+//            mRecyclerView.setBackgroundResource(R.drawable.icon_background);
+            findViewById(R.id.rl_begin).setVisibility(View.INVISIBLE);
+        }
 //            mRecyclerView.addItemDecoration(new DividerItemDecoration(getApplicationContext(),DividerItemDecoration.HORIZONTAL));
 //            final int left = parent.getPaddingLeft();
 //            final int right = parent.getWidth() - parent.getPaddingRight();
@@ -101,9 +117,7 @@ public class AlbumActivity extends AppCompatActivity {
 
         class MyViewHolder extends RecyclerView.ViewHolder
         {
-
             TextView tv;
-
             public MyViewHolder(View view)
             {
                 super(view);
@@ -132,5 +146,42 @@ public class AlbumActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+    /**
+    * permissions for whole app
+    */
+    private List<String> checkPermissions() {
+        List<String> permissions = new ArrayList<>();
+
+        if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+//        if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+//            permissions.add(Manifest.permission.READ_PHONE_STATE);
+//        }
+        if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE) != PackageManager.PERMISSION_GRANTED) {
+            permissions.add(Manifest.permission.READ_PHONE_STATE);
+        }
+        return permissions;
+    }
+
+    private void requestPermissions() {
+        List<String> permissions = checkPermissions();
+        if (permissions.size() > 0) {
+            ActivityCompat.requestPermissions(this, permissions.toArray(new String[permissions.size()]), 0);
+        }
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        for (int i = 0; i < permissions.length; i++) {
+            String permission = permissions[i];
+            if (permission.equals(Manifest.permission.WRITE_EXTERNAL_STORAGE) && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+//                FileLogManager.init();
+                break;
+            }
+        }
     }
 }
